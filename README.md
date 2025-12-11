@@ -176,14 +176,24 @@ Multiple initialization statements:
 python postgres_connection_test.py -n 10 -q "SET timezone = 'UTC'; SET statement_timeout = '5min'"
 ```
 
+Run initialization query on only a percentage of connections:
+```bash
+# Run query on 50% of connections (useful for testing mixed scenarios)
+python postgres_connection_test.py -n 20 -q "SET application_name = 'test'" --query-percent 50
+
+# Run query on 25% of connections
+python postgres_connection_test.py -n 100 -q "SET search_path = 'public'" --query-percent 25
+```
+
 **Command-line options:**
 - `-n, --num-connections`: Number of connections to spawn (default: 10)
 - `-q, --init-query`: SQL query to execute after establishing each connection (e.g., SET operations). Can include multiple statements separated by semicolons.
+- `--query-percent`: Percentage (0-100) of connections that should run the init-query. If not specified and init-query is provided, all connections run it. Useful for testing mixed connection scenarios.
 
 The script will:
 1. Load database configuration from `.env`
 2. Spawn the specified number of connections
-3. Execute initialization query on each connection (if provided)
+3. Execute initialization query on selected connections (if provided and percentage specified, randomly selects which connections get the query)
 4. Test each connection
 5. Keep connections open and monitor them
 6. Log status every 30 seconds

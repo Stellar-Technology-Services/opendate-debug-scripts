@@ -12,6 +12,7 @@ import time
 import signal
 import argparse
 import logging
+import random
 from typing import List, Optional
 from dotenv import load_dotenv
 import psycopg2
@@ -161,7 +162,7 @@ def create_connection(db_config: dict, conn_num: int, init_query: Optional[str] 
         return None
 
 
-def spawn_connections(num_connections: int, db_config: dict, init_query: Optional[str] = None):
+def spawn_connections(num_connections: int, db_config: dict, init_query: Optional[str] = None, query_percent: Optional[float] = None):
     """
     Spawn the specified number of connections
     
@@ -169,19 +170,44 @@ def spawn_connections(num_connections: int, db_config: dict, init_query: Optiona
         num_connections: Number of connections to create
         db_config: Database configuration dictionary
         init_query: Optional SQL query to run after each connection (e.g., SET operations)
+        query_percent: Optional percentage (0-100) of connections that should run the init_query.
+                      If None and init_query is provided, all connections run it.
     """
     logger.info(f"Spawning {num_connections} connections...")
+    
+    # Determine which connections should get the init query
+    connections_with_query = set()
     if init_query:
-        logger.info(f"Initialization query: {init_query}")
+        if query_percent is not None:
+            # Calculate how many connections should get the query
+            num_with_query = max(1, int(num_connections * query_percent / 100.0))
+            # Randomly select which connections get the query
+            connections_with_query = set(random.sample(range(1, num_connections + 1), num_with_query))
+            logger.info(f"Initialization query: {init_query}")
+            logger.info(f"Query will run on {len(connections_with_query)} out of {num_connections} connections ({query_percent}%)")
+        else:
+            # All connections get the query
+            connections_with_query = set(range(1, num_connections + 1))
+            logger.info(f"Initialization query: {init_query}")
+            logger.info(f"Query will run on all connections")
     
     successful_connections = 0
     failed_connections = 0
+    connections_with_query_count = 0
+    connections_without_query_count = 0
     
     for i in range(1, num_connections + 1):
-        conn = create_connection(db_config, i, init_query)
+        # Determine if this connection should get the query
+        should_run_query = init_query if i in connections_with_query else None
+        
+        conn = create_connection(db_config, i, should_run_query)
         if conn:
             connections.append(conn)
             successful_connections += 1
+            if should_run_query:
+                connections_with_query_count += 1
+            else:
+                connections_without_query_count += 1
         else:
             failed_connections += 1
         
@@ -193,6 +219,9 @@ def spawn_connections(num_connections: int, db_config: dict, init_query: Optiona
     logger.info(f"  Successful: {successful_connections}")
     logger.info(f"  Failed: {failed_connections}")
     logger.info(f"  Total open: {len(connections)}")
+    if init_query and query_percent is not None:
+        logger.info(f"  With init query: {connections_with_query_count}")
+        logger.info(f"  Without init query: {connections_without_query_count}")
     
     if len(connections) == 0:
         logger.error("No connections were established. Exiting.")
@@ -246,6 +275,9 @@ Examples:
 
   # Set multiple session variables
   python postgres_connection_test.py -n 10 -q "SET timezone = 'UTC'; SET statement_timeout = '5min'"
+
+  # Run query on only 50% of connections
+  python postgres_connection_test.py -n 20 -q "SET application_name = 'test'" --query-percent 50
         """
     )
     parser.add_argument(
@@ -261,8 +293,26 @@ Examples:
         help='SQL query to execute after establishing each connection (e.g., SET operations). '
              'Can include multiple statements separated by semicolons.'
     )
+    parser.add_argument(
+        '--query-percent',
+        type=float,
+        default=None,
+        metavar='PERCENT',
+        help='Percentage (0-100) of connections that should run the init-query. '
+             'If not specified and init-query is provided, all connections run it. '
+             'Useful for testing mixed connection scenarios.'
+    )
     
     args = parser.parse_args()
+    
+    # Validate query-percent if provided
+    if args.query_percent is not None:
+        if args.init_query is None:
+            logger.error("--query-percent requires --init-query to be specified")
+            sys.exit(1)
+        if not (0 <= args.query_percent <= 100):
+            logger.error("--query-percent must be between 0 and 100")
+            sys.exit(1)
     
     # Register signal handler for graceful shutdown
     signal.signal(signal.SIGINT, signal_handler)
@@ -272,7 +322,7 @@ Examples:
     db_config = get_db_config()
     
     # Spawn connections
-    spawn_connections(args.num_connections, db_config, args.init_query)
+    spawn_connections(args.num_connections, db_config, args.init_query, args.query_percent)
     
     # Monitor connections
     monitor_connections()
