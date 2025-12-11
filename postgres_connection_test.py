@@ -213,7 +213,7 @@ def spawn_connections(num_connections: int, db_config: dict, init_query: Optiona
         
         # Small delay between connections to avoid overwhelming the server
         if i < num_connections:
-            time.sleep(0.1)
+            time.sleep(0.05)
     
     logger.info(f"\nConnection Summary:")
     logger.info(f"  Successful: {successful_connections}")
