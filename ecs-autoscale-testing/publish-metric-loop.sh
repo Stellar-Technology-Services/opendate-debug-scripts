@@ -12,7 +12,7 @@ AWS_REGION="${AWS_REGION:-us-east-1}"
 METRIC_NAMESPACE="${METRIC_NAMESPACE:-Test/Autoscaling}"
 METRIC_NAME="${METRIC_NAME:-SyntheticLoad}"
 
-ECS_CLUSTER="${ECS_CLUSTER:-Opendate-VPC-cluster}"
+ECS_CLUSTER="${ECS_CLUSTER:-opendate-stage}" # stage=opendate-stage , prod=Opendate-VPC-cluster
 ECS_SERVICE="${ECS_SERVICE:-opendate-sidekiq}"
 
 # Must match the scaling policy's dimension set exactly
