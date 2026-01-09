@@ -20,7 +20,7 @@ Set these in your shell before running the commands below.
 ```bash
 # --- REQUIRED / EDIT ME ---
 export AWS_REGION="${AWS_REGION:-us-east-1}"          # <-- change if needed
-export ECS_CLUSTER="${ECS_CLUSTER:-opendate-stage}" # stage=opendate-stage , prod=Opendate-VPC-cluster
+export ECS_CLUSTER="${ECS_CLUSTER:-opendate-stage}" # stage cluster (override explicitly if needed)
 export ECS_SERVICE="${ECS_SERVICE:-opendate-sidekiq}"
 
 # Safe test bounds (you provided 2 / 4)

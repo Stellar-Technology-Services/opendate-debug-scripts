@@ -11,7 +11,7 @@ These commands are meant to produce copy/paste output (or screenshots) proving:
 
 ```bash
 export AWS_REGION="${AWS_REGION:-us-east-1}"          # <-- change if needed
-export ECS_CLUSTER="${ECS_CLUSTER:-Opendate-VPC-cluster}"
+export ECS_CLUSTER="${ECS_CLUSTER:-opendate-stage}" # stage cluster (override explicitly if needed)
 export ECS_SERVICE="${ECS_SERVICE:-opendate-sidekiq}"
 
 export RESOURCE_ID="service/${ECS_CLUSTER}/${ECS_SERVICE}"
