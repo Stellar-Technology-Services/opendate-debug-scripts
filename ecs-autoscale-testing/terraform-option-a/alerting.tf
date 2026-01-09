@@ -48,16 +48,17 @@ resource "aws_cloudwatch_event_target" "sns" {
   target_id = "send-to-sns"
   arn       = aws_sns_topic.scaling_notifications.arn
 
-  # Format the message for readability
+  # Format the message - use simple single-line format since SNS email
+  # doesn't interpret JSON newlines properly
   input_transformer {
     input_paths = {
       cluster   = "$.detail.clusterArn"
-      service   = "$.detail.serviceName"
+      service   = "$.resources[0]"
       eventType = "$.detail.eventType"
       eventName = "$.detail.eventName"
       createdAt = "$.detail.createdAt"
     }
-    input_template = "\"ECS Scaling Event\\n\\nCluster: <cluster>\\nService: <service>\\nEvent Type: <eventType>\\nEvent Name: <eventName>\\nTime: <createdAt>\\n\\nThis notification was triggered by an ECS service scaling action.\""
+    input_template = "\"[ECS Scaling] <eventName> | Cluster: <cluster> | Service: <service> | Type: <eventType> | Time: <createdAt>\""
   }
 }
 
