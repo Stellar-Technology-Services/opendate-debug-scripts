@@ -29,8 +29,10 @@ HIGH_VALUE="${HIGH_VALUE:-200}"   # > TARGET_VALUE to encourage scale-out
 LOW_VALUE="${LOW_VALUE:-0}"       # < TARGET_VALUE to encourage scale-in
 
 # Durations
-HIGH_MINUTES="${HIGH_MINUTES:-10}"
-LOW_MINUTES="${LOW_MINUTES:-15}"
+# HIGH: 4 min is enough (scale-out alarm needs 3 datapoints)
+# LOW: 16 min required (scale-in alarm needs 15 consecutive datapoints)
+HIGH_MINUTES="${HIGH_MINUTES:-4}"
+LOW_MINUTES="${LOW_MINUTES:-16}"
 
 metric_data() {
   local value="$1"

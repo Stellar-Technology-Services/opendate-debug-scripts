@@ -49,19 +49,29 @@ variable "target_value" {
 variable "scale_out_cooldown" {
   description = "Scale-out cooldown in seconds."
   type        = number
-  default     = 60
+  default     = 30
 }
 
 variable "scale_in_cooldown" {
   description = "Scale-in cooldown in seconds."
   type        = number
-  default     = 60
+  default     = 30
 }
 
 variable "disable_scale_in" {
   description = "If true, the policy will not scale in."
   type        = bool
   default     = false
+}
+
+# =============================================================================
+# Alerting Variables
+# =============================================================================
+
+variable "notification_email" {
+  description = "Email address to receive scaling event notifications."
+  type        = string
+  default     = "stellar@opendate.io"
 }
 
 
