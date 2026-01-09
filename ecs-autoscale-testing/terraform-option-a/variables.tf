@@ -16,18 +16,6 @@ variable "ecs_service" {
   default     = "opendate-sidekiq"
 }
 
-variable "min_capacity" {
-  description = "Minimum desired task count during the test."
-  type        = number
-  default     = 2
-}
-
-variable "max_capacity" {
-  description = "Maximum desired task count during the test."
-  type        = number
-  default     = 4
-}
-
 variable "policy_name" {
   description = "Scaling policy name."
   type        = string

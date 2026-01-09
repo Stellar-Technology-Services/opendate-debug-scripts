@@ -2,20 +2,14 @@ locals {
   resource_id = "service/${var.ecs_cluster}/${var.ecs_service}"
 }
 
-resource "aws_appautoscaling_target" "ecs_desired_count" {
-  max_capacity       = var.max_capacity
-  min_capacity       = var.min_capacity
-  resource_id        = local.resource_id
-  scalable_dimension = "ecs:service:DesiredCount"
-  service_namespace  = "ecs"
-}
-
+# NOTE: This assumes a scalable target already exists for the ECS service.
+# The policy will attach to the existing target without modifying min/max capacity.
 resource "aws_appautoscaling_policy" "target_tracking" {
   name               = var.policy_name
   policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.ecs_desired_count.resource_id
-  scalable_dimension = aws_appautoscaling_target.ecs_desired_count.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.ecs_desired_count.service_namespace
+  resource_id        = local.resource_id
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
 
   target_tracking_scaling_policy_configuration {
     target_value       = var.target_value
@@ -30,10 +24,17 @@ resource "aws_appautoscaling_policy" "target_tracking" {
       unit        = "Count"
 
       # IMPORTANT: dimensions must match the published time series exactly
-      dimensions = {
-        TestId  = var.metric_test_id
-        Cluster = var.ecs_cluster
-        Service = var.ecs_service
+      dimensions {
+        name  = "TestId"
+        value = var.metric_test_id
+      }
+      dimensions {
+        name  = "Cluster"
+        value = var.ecs_cluster
+      }
+      dimensions {
+        name  = "Service"
+        value = var.ecs_service
       }
     }
   }
